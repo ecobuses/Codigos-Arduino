@@ -142,7 +142,7 @@ void promedioCorriente(){
   }
   delay(5);
   }
-  corriente.corrienteLeida=suma/Csuavizado;
+  corriente.corrienteLeida=sumaCsuavizado;
   corriente.tensionLeida=sumaV/suavizado;
  
 }
