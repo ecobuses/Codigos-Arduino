@@ -7,14 +7,19 @@
 // entrada 3 (no se que es) 
 #define pinDectectaCargador PD5
 //Con este pin anal�gico A5 se puede leer la corriente 
-#define pinCorriente A5
-//Defino el voltaje de referencia para diferenciar la entrada o salida de corriente 
-#define vRef 2.5
+#define pinCorriente A3
+#define suavizado 30
 double analogicoTension = 0; 
 double tension = 0;
 int enchufeConectado = 0;
 double corrienteAnalogica = 0.0;
 double corrienteDigital = 0.0;
+//Estructura
+typedef struct{
+  float tensionLeida;
+  float corrienteLeida;
+} corrienteEstructura;
+corrienteEstructura corriente;
 //---------------------------- Comunicaci�n CAN --------------------------//
 MCP2515 mcp2515(10);
 struct can_frame trama1;
@@ -104,11 +109,47 @@ void loop() {
     //**************************
   
   //------------------------- Leer la corriente -----------------------------------// 
-  corrienteAnalogica = analogRead(pinCorriente);
-  //Entiendo que aca estoy leyendo la corriente y pasandolo a valor d�gital.
-  corrienteDigital = (5.0/1023)*corrienteAnalogica;
+    promedioCorriente();
+    Serial.print("Voltaje medido: ");
+    Serial.print(corriente.tensionLeida);
+    Serial.print(" V | Corriente: ");
+    Serial.print(corriente.corrienteLeida);
+    Serial.println(" A");
+    enviarCorriente(corriente.corrienteLeida);
+
   //Se que hay un tema de diferenciar la corriente entrante y saliente dependiendo de si la tensi�n es menor que 2.5 o mayor que 2.5, 
   //pero no estoy muy  seguro 
-  delay(3000); //espero 30 segundos y pregunta de nuevo por el enchufe
-
+  delay(300); //espero 30 segundos y pregunta de nuevo por el enchufe
+}
+void promedioCorriente(){
+  const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
+  const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 0.0267 mV/A -> 0.0267 V/A
+  const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
+  float sumaC=0.0;
+  float sumaV=0.0;
+  for(int i = 0; i<suavizado; i++){
+     int corrienteAnalogica = analogRead(pinCorriente);
+  // 1. Convertir la lectura digital (0-1023) a Voltaje real (0.0 V - 5.0 V)
+  float voltajeMedido = (5.0 / 1023.0) * corrienteAnalogica;
+  sumaV+=voltajeMedido;
+  if(voltajeMedido < 0.2){
+    Serial.println("Voltaje es menor que 0.2 esta fuera de los rango negativos 0.2-2.5/0.004=-575 A");
+  }else if(voltajeMedido > 4.8){
+    Serial.println("Voltaje es mayor a 4.8 esta fuera del rango positivo 5.0-2.5/0.004=625 A, el canal 2 mide a lo mucho +250A");
+  }else{
+    // 2. Aplicar la f�rmula del datasheet: I = (Uout - Uo) / S
+    sumaC+= ((5*voltajeMedido)/(alimentacionHall) - vRef) / sensibilidad;
+  }
+  delay(5);
+  }
+  corriente.corrienteLeida=suma/Csuavizado;
+  corriente.tensionLeida=sumaV/suavizado;
+ 
+}
+void enviarCorriente(float corriente){
+  int corrienteEntera = (int) corriente;
+  int corrienteDecimal = (corriente -corrienteEntera)*100;
+  tramaCorriente.data[0]=corrienteEntera;
+  tramaCorriente.data[1]=corrienteDecimal;
+  if(mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK){}
 }
