@@ -8,7 +8,7 @@
 // entrada 3 (no se que es)
 #define pinDectectaCargador PD5
 //Con este pin anal�gico A5 se puede leer la corriente
-#define pinCorriente A2
+#define pinCorriente A3
 #define suavizado 30
 //-----------------------------------------------------------------------------------//
 //------------------------------------- Variables ----------------------------------//
@@ -141,7 +141,7 @@ void chequeoTension(){
 //------------------------------------------------------------------------------------------------------//
 //---------------------------------------- Informo en monitor serial -----------------------------------//
 void informeSerial(){
-  Serial.print("Detecta el cargador, si lo detecta envía un 0, en caso contrario un 1");
+  Serial.print("Detecta el cargador, si lo detecta envía un 0, en caso contrario un 1 ");
   Serial.println(enchufeConectado);
   Serial.print("Tension ");
   Serial.println(tension);
@@ -168,7 +168,7 @@ void leerTension(){
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
   const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
-  const float sensibilidad = 0.004;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
+  const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
   const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
