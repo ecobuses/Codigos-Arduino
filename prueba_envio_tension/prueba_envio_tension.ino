@@ -141,7 +141,7 @@ void chequeoTension(){
 //------------------------------------------------------------------------------------------------------//
 //---------------------------------------- Informo en monitor serial -----------------------------------//
 void informeSerial(){
-  Serial.print("Detecta el cargador, si lo detecta envía un 0, en caso contrario un 1");
+  Serial.print("Detecta el cargador, si lo detecta envía un 0, en caso contrario un 1: ");
   Serial.println(enchufeConectado);
   Serial.print("Tension ");
   Serial.println(tension);
