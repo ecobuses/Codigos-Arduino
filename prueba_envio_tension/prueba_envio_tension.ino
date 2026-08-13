@@ -8,7 +8,7 @@
 // entrada 3 (no se que es)
 #define pinDectectaCargador PD5
 //Con este pin anal�gico A5 se puede leer la corriente
-#define pinCorriente A3
+#define pinCorriente A2
 #define suavizado 30
 //-----------------------------------------------------------------------------------//
 //------------------------------------- Variables ----------------------------------//
@@ -98,6 +98,11 @@ void loop() {
 void reciboTrama(){
   while (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK){
     if(canMsg.can_id == 0x123){
+      Serial.print("Cand id ");
+      Serial.print(canMsg.can_id);
+      Serial.print("|");
+      Serial.print(" Dato: ");
+      Serial.println(canMsg.data[0]);
       switch(canMsg.data[0]){
         case 2:{
           digitalWrite(RELE2,LOW);
@@ -162,9 +167,9 @@ void leerTension(){
 //------------------------------------------ Leo corriente ----------------------------------------------//
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
-  const float vRef = 2.425;            // Tensi�n de offset a 0 A (2.5 V)
-  const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
-  const float alimentacionHall = 4.85; //Tension con el cual se alimenta el sensor.
+  const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
+  const float sensibilidad = 0.004;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
+  const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
   for (int i = 0; i < suavizado; i++) {
@@ -193,10 +198,6 @@ void enviarCorriente(float corrienteArg) {
   // Guardado est�ndar en 2 bytes para mantener signo y decimales
   tramaCorriente.data[0] = (uint8_t)(corrienteEscalada >> 8);
   tramaCorriente.data[1] = (uint8_t)(corrienteEscalada & 0xFF);
-  Serial.print("corriente entera: ");
-  Serial.println(tramaCorriente.data[0]);
-  Serial.print("Corriente decimal: ");
-  Serial.println(tramaCorriente.data[1]);
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error SPI al intentar enviar mensaje.");}
 }
 //------------------------------------------------------------------------------------------------------//
@@ -208,7 +209,6 @@ void enviarTension(){
     int tensionDecimal = (tension - tensionEntera) * 100;
     tramaTension.data[0] = tensionEntera;
     tramaTension.data[1] = tensionDecimal;
-    Serial.println("Esto se ejecuta");
     if (mcp2515.sendMessage(&tramaTension) == MCP2515::ERROR_OK) {
     } else {
       Serial.println("Error SPI al intentar enviar mensaje.");
