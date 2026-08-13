@@ -63,15 +63,29 @@ void setup() {
 }
 
 void loop() {
-  //----------------- Detecta y muestra si el cargador
-  enchufeConectado = digitalRead(pinDectectaCargador); //o digitalRead?? ver el releee
-  Serial.print("Detecta el cargador, si lo detecta envía un 0, en caso contrario un 1");
-  Serial.println(enchufeConectado);
+  //----------------- Detecta y muestra si el cargador ------------------//
   //Detecta el cargador  y env�a un 0
-  analogicoTension = analogRead(pinTension);
-  tension = ((analogicoTension * 5.0 / 1023.0) * (100 / 5));
-  Serial.print("Tension ");
-  Serial.println(tension);
+  enchufeConectado = digitalRead(pinDectectaCargador); //o digitalRead?? ver el releee
+  //--------------------------------------------------------------------//
+  //----------------- Leer la tensión ----------------------------------//
+  leerTension();
+  //-------------------------------------------------------------------//
+  //------------------- Chequeo la tensión para que no cargue demás --//
+  chequeoTension();
+  //------------------------------------------------------------------//
+  //--------------------------Enviar Tensión -------------------------------//
+  enviarTension();
+  //-----------------------------------------------------------------//
+  //------------------------- Leer la corriente -----------------------------------//
+  promedioCorriente();
+  enviarCorriente(corriente.corrienteLeida);
+  //----------------------------------------------------------------//
+  // ------------------------ Informe en consola -------------------//
+  informeSerial();
+  //---------------------------------------------------------------//
+  delay(900); //espero 1 segundos y pregunta de nuevo por el enchufe
+}
+void chequeoTension(){
   if (enchufeConectado == HIGH) {
     if (tension > 83.5) { //poner aca el numero que tiene que i por la tabla de equivalencias
       digitalWrite(r2, LOW); //lo bajo
@@ -81,26 +95,32 @@ void loop() {
       digitalWrite(r2, HIGH);
     }
   }
-  
-  //--------------------------Enviar Tensión -------------------------------//
-  enviarTension();
-  //------------------------- Leer la corriente -----------------------------------//
-  promedioCorriente();
+  if(contador30++ == 60*30){
+    activoCarga=1;
+    contador30=0;
+  }
+}
+void informeSerial(){
+  Serial.print("Detecta el cargador, si lo detecta envía un 0, en caso contrario un 1");
+  Serial.println(enchufeConectado);
+  Serial.print("Tension ");
+  Serial.println(tension);
   Serial.print("Voltaje medido: ");
   Serial.print(corriente.tensionLeida);
   Serial.print(" V | Corriente: ");
   Serial.print(corriente.corrienteLeida);
   Serial.println(" A");
-  enviarCorriente(corriente.corrienteLeida);
-  if(contador30++ == 60*30){
-    activoCarga=1;
-    contador30=0;
-  }
-  //Se que hay un tema de diferenciar la corriente entrante y saliente dependiendo de si la tensi�n es menor que 2.5 o mayor que 2.5,
-  //pero no estoy muy  seguro
-  delay(900); //espero 1 segundos y pregunta de nuevo por el enchufe
 }
-
+//Lee la tensión y además suaviza 
+void leerTension(){
+  float sumaT=0.0;
+  for(int j=0; j<suavizado; j++){
+    analogicoTension = analogRead(pinTension);
+    //Convierto el valor 
+    sumaT+=((analogicoTension * 5.0 / 1023.0) * (100 / 5));
+  }
+  tension=sumaT/suavizado;
+}
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
   const float vRef = 2.45;            // Tensi�n de offset a 0 A (2.5 V)
