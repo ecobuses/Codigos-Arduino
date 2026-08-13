@@ -1,5 +1,6 @@
 #include <mcp2515.h>
 #include <EEPROM.h>
+//-------------------------------------- Definiciones ------------------------------//
 #define pinTension A4
 #define r2 PD7
 // pin que marca si el cargador est� conectado
@@ -9,6 +10,9 @@
 //Con este pin anal�gico A5 se puede leer la corriente
 #define pinCorriente A3
 #define suavizado 30
+//-----------------------------------------------------------------------------------//
+
+//------------------------------------ Variables ------------------------------------//
 double analogicoTension = 0;
 double tension = 0;
 int enchufeConectado = 0;
@@ -24,16 +28,14 @@ typedef struct {
   float corrienteLeida;
 } corrienteEstructura;
 corrienteEstructura corriente;
+//----------------------------------------------------------------------------------//
+
+
 //---------------------------- Comunicaci�n CAN --------------------------//
 MCP2515 mcp2515(10);
-struct can_frame trama1;
 struct can_frame tramaCorriente;
-struct can_frame tramaCorrienteN;
 struct can_frame tramaTension;
 struct can_frame canMsg;
-
-int i = 0;
-int j = 0;
 //------------------------------------------------------------------------//
 
 void setup() {
@@ -65,9 +67,8 @@ void setup() {
 
 void loop() {
   //----------------- Detecta y muestra si el cargador
-  Serial.print("Cargador: ");
-  Serial.print("Mostrame esto: ");
   enchufeConectado = digitalRead(pinDectectaCargador); //o digitalRead?? ver el releee
+  Serial.print("Detecta el cargador, si lo detecta envía un 0, en caso contrario un 1");
   Serial.println(enchufeConectado);
   //Detecta el cargador  y env�a un 0
   analogicoTension = analogRead(pinTension);
@@ -102,6 +103,8 @@ void loop() {
   //pero no estoy muy  seguro
   delay(1000); //espero 1 segundos y pregunta de nuevo por el enchufe
 }
+
+// Función que promedia la corriente leída. 
 void promedioCorriente() {
   const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
   const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 0.0267 mV/A -> 0.0267 V/A
@@ -127,6 +130,7 @@ void promedioCorriente() {
   corriente.tensionLeida = sumaV / suavizado;
 
 }
+//Función que envía la trama de corriente 
 void enviarCorriente(float corriente) {
   int corrienteEntera = (int) corriente;
   int corrienteDecimal = (corriente - corrienteEntera) * 100;
@@ -134,6 +138,9 @@ void enviarCorriente(float corriente) {
   tramaCorriente.data[1] = corrienteDecimal;
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}
 }
+
+
+// Función que envía la tensión.
 void enviarTension(){
     //Envio trama de tension
     int tensionEntera = (int)(tension);
@@ -154,5 +161,4 @@ void enviarTension(){
     } else {
       Serial.println("Error SPI al intentar enviar mensaje.");
     }
-  //**************************/
 }
