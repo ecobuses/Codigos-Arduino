@@ -92,22 +92,21 @@ void loop() {
   informeSerial();
   //---------------------------------------------------------------//
   reciboTrama();
-  delay(900); //espero 1 segundos y pregunta de nuevo por el enchufe
 }
 //------------------------------------------------------------------------------------------------------//
 //-------------------------------------------- Recibo trama desde QT -----------------------------------//
 void reciboTrama(){
-  if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK){
+  while (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK){
     if(canMsg.can_id == 0x123){
       switch(canMsg.data[0]){
         case 2:{
-          digitalWrite(RELAY2,LOW);
+          digitalWrite(RELE2,LOW);
           Serial.println("Bajo Relay 2");
           EEPROM.write(estadoRelayDos,0);
           break;
         }
         case 3:{
-          digitalWrite(RELAY2,HIGH);
+          digitalWrite(RELE2,HIGH);
           Serial.println("Alto Relay 2");
           EEPROM.write(estadoRelayDos,1);
           break;
