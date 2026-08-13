@@ -92,22 +92,26 @@ void loop() {
   informeSerial();
   //---------------------------------------------------------------//
   reciboTrama();
-  delay(900); //espero 1 segundos y pregunta de nuevo por el enchufe
 }
 //------------------------------------------------------------------------------------------------------//
 //-------------------------------------------- Recibo trama desde QT -----------------------------------//
 void reciboTrama(){
-  if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK){
+  while (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK){
+    Serial.print("Cand id ");
+    Serial.print(canMsg.can_id);
+    Serial.print("|");
+    Serial.print(" Dato: ");
+    Serial.println(canMsg.data[0]);
     if(canMsg.can_id == 0x123){
       switch(canMsg.data[0]){
         case 2:{
-          digitalWrite(RELAY2,LOW);
+          digitalWrite(RELE2,LOW);
           Serial.println("Bajo Relay 2");
           EEPROM.write(estadoRelayDos,0);
           break;
         }
         case 3:{
-          digitalWrite(RELAY2,HIGH);
+          digitalWrite(RELE2,HIGH);
           Serial.println("Alto Relay 2");
           EEPROM.write(estadoRelayDos,1);
           break;
@@ -194,10 +198,6 @@ void enviarCorriente(float corrienteArg) {
   // Guardado est�ndar en 2 bytes para mantener signo y decimales
   tramaCorriente.data[0] = (uint8_t)(corrienteEscalada >> 8);
   tramaCorriente.data[1] = (uint8_t)(corrienteEscalada & 0xFF);
-  Serial.print("corriente entera: ");
-  Serial.println(tramaCorriente.data[0]);
-  Serial.print("Corriente decimal: ");
-  Serial.println(tramaCorriente.data[1]);
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error SPI al intentar enviar mensaje.");}
 }
 //------------------------------------------------------------------------------------------------------//
@@ -209,7 +209,6 @@ void enviarTension(){
     int tensionDecimal = (tension - tensionEntera) * 100;
     tramaTension.data[0] = tensionEntera;
     tramaTension.data[1] = tensionDecimal;
-    Serial.println("Esto se ejecuta");
     if (mcp2515.sendMessage(&tramaTension) == MCP2515::ERROR_OK) {
     } else {
       Serial.println("Error SPI al intentar enviar mensaje.");
