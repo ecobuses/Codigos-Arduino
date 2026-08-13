@@ -83,34 +83,9 @@ void loop() {
       digitalWrite(r2, HIGH);
     }
   }
-  if (j++ == 1) {
-    j = 0;
-    //Envio trama de tension
-    int tensionEntera = (int)(tension);
-    int tensionDecimal = (tension - tensionEntera) * 100;
-    tramaTension.data[0] = tensionEntera;
-    tramaTension.data[1] = tensionDecimal;
-    Serial.println("Esto se ejecuta");
-    //***************************
-    if (mcp2515.sendMessage(&tramaTension) == MCP2515::ERROR_OK) {
-      uint8_t canStat = mcp2515.getErrorFlags();
-
-      if (canStat != 0) {
-        Serial.print("Error en bus CAN (Flags de error): ");
-        Serial.println(canStat, HEX);
-      } else {
-        Serial.println("Mensaje colocado en el buffer del MCP2515.");
-      }
-    } else {
-      Serial.println("Error SPI al intentar enviar mensaje.");
-    }
-  }
-  else {
-    //flag=1;
-    Serial.println("MsgTension TX error");
-  }
-  //**************************/
-
+  
+  //--------------------------Enviar Tensión -------------------------------//
+  enviarTension();
   //------------------------- Leer la corriente -----------------------------------//
   promedioCorriente();
   Serial.print("Voltaje medido: ");
@@ -119,7 +94,7 @@ void loop() {
   Serial.print(corriente.corrienteLeida);
   Serial.println(" A");
   enviarCorriente(corriente.corrienteLeida);
-  if(contador30++ == 1000*60*30){
+  if(contador30++ == 60*30){
     activoCarga=1;
     contador30=0;
   }
@@ -158,4 +133,26 @@ void enviarCorriente(float corriente) {
   tramaCorriente.data[0] = corrienteEntera;
   tramaCorriente.data[1] = corrienteDecimal;
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}
+}
+void enviarTension(){
+    //Envio trama de tension
+    int tensionEntera = (int)(tension);
+    int tensionDecimal = (tension - tensionEntera) * 100;
+    tramaTension.data[0] = tensionEntera;
+    tramaTension.data[1] = tensionDecimal;
+    Serial.println("Esto se ejecuta");
+    //***************************
+    if (mcp2515.sendMessage(&tramaTension) == MCP2515::ERROR_OK) {
+      uint8_t canStat = mcp2515.getErrorFlags();
+
+      if (canStat != 0) {
+        Serial.print("Error en bus CAN (Flags de error): ");
+        Serial.println(canStat, HEX);
+      } else {
+        Serial.println("Mensaje colocado en el buffer del MCP2515.");
+      }
+    } else {
+      Serial.println("Error SPI al intentar enviar mensaje.");
+    }
+  //**************************/
 }
