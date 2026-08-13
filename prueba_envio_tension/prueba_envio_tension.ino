@@ -127,12 +127,6 @@ void promedioCorriente() {
   corriente.corrienteLeida = sumaC /suavizado;
   corriente.tensionLeida = sumaV / suavizado;
 }
-<<<<<<< HEAD
-//Función que envía la trama de corriente 
-void enviarCorriente(float corriente) {
-  int corrienteEntera = (int) corriente;
-  int corrienteDecimal = (corriente - corrienteEntera) * 100;
-=======
 void enviarCorriente(float corrienteArg) {
   int corrienteEntera = (int) corrienteArg;
   int corrienteDecimal = (corrienteArg - corrienteEntera) * 100;
@@ -144,7 +138,6 @@ void enviarCorriente(float corrienteArg) {
   Serial.println(corrienteEntera);
   Serial.print("Corriente decimal: ");
   Serial.println(corrienteDecimal);
->>>>>>> 90cfaef829bf8e1dde8f4b2e134162813782f1e2
   tramaCorriente.data[0] = corrienteEntera;
   tramaCorriente.data[1] = corrienteDecimal;
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error SPI al intentar enviar mensaje.");}
@@ -159,7 +152,6 @@ void enviarTension(){
     tramaTension.data[0] = tensionEntera;
     tramaTension.data[1] = tensionDecimal;
     Serial.println("Esto se ejecuta");
-    //***************************
     if (mcp2515.sendMessage(&tramaTension) == MCP2515::ERROR_OK) {
     } else {
       Serial.println("Error SPI al intentar enviar mensaje.");
