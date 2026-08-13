@@ -8,7 +8,7 @@
 // entrada 3 (no se que es)
 #define pinDectectaCargador PD5
 //Con este pin anal�gico A5 se puede leer la corriente
-#define pinCorriente A3
+#define pinCorriente A2
 #define suavizado 30
 //-----------------------------------------------------------------------------------//
 //------------------------------------- Variables ----------------------------------//
@@ -97,12 +97,12 @@ void loop() {
 //-------------------------------------------- Recibo trama desde QT -----------------------------------//
 void reciboTrama(){
   while (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK){
-    Serial.print("Cand id ");
-    Serial.print(canMsg.can_id);
-    Serial.print("|");
-    Serial.print(" Dato: ");
-    Serial.println(canMsg.data[0]);
     if(canMsg.can_id == 0x123){
+      Serial.print("Cand id ");
+      Serial.print(canMsg.can_id);
+      Serial.print("|");
+      Serial.print(" Dato: ");
+      Serial.println(canMsg.data[0]);
       switch(canMsg.data[0]){
         case 2:{
           digitalWrite(RELE2,LOW);
@@ -167,9 +167,9 @@ void leerTension(){
 //------------------------------------------ Leo corriente ----------------------------------------------//
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
-  const float vRef = 2.425;            // Tensi�n de offset a 0 A (2.5 V)
-  const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
-  const float alimentacionHall = 4.85; //Tension con el cual se alimenta el sensor.
+  const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
+  const float sensibilidad = 0.004;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
+  const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
   for (int i = 0; i < suavizado; i++) {
