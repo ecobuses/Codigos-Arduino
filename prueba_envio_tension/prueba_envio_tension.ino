@@ -102,9 +102,9 @@ void loop() {
   delay(900); //espero 1 segundos y pregunta de nuevo por el enchufe
 }
 void promedioCorriente() {
-  const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
+  const float vRef = 2.45;            // Tensi�n de offset a 0 A (2.5 V)
   const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
-  const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
+  const float alimentacionHall = 4.9; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
   for (int i = 0; i < suavizado; i++) {
@@ -127,18 +127,15 @@ void promedioCorriente() {
   corriente.tensionLeida = sumaV / suavizado;
 }
 void enviarCorriente(float corrienteArg) {
-  int corrienteEntera = (int) corrienteArg;
-  int corrienteDecimal = (corrienteArg - corrienteEntera) * 100;
-  if(corrienteDecimal < 0.0){
-    corrienteDecimal*=-1;
-    corrienteEntera*=-1;
-  }
+  int16_t corrienteEscalada = (int16_t)(corrienteArg * 100.0);
+  
+  // Guardado est�ndar en 2 bytes para mantener signo y decimales
+  tramaCorriente.data[0] = (uint8_t)(corrienteEscalada >> 8);
+  tramaCorriente.data[1] = (uint8_t)(corrienteEscalada & 0xFF);
   Serial.print("corriente entera: ");
-  Serial.println(corrienteEntera);
+  Serial.println(tramaCorriente.data[0]);
   Serial.print("Corriente decimal: ");
-  Serial.println(corrienteDecimal);
-  tramaCorriente.data[0] = corrienteEntera;
-  tramaCorriente.data[1] = corrienteDecimal;
+  Serial.println(tramaCorriente.data[1]);
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error SPI al intentar enviar mensaje.");}
 }
 void enviarTension(){
