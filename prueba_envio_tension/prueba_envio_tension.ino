@@ -198,7 +198,7 @@ void enviarCorriente(float corrienteArg) {
   // Guardado est�ndar en 2 bytes para mantener signo y decimales
   tramaCorriente.data[0] = (uint8_t)(corrienteEscalada >> 8);
   tramaCorriente.data[1] = (uint8_t)(corrienteEscalada & 0xFF);
-  tramaCorriente.data[2] = (uint8_t)(enchufeDetectado);
+  tramaCorriente.data[2] = (uint8_t)(enchufeConectado);
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error SPI al intentar enviar mensaje.");}
 }
 //------------------------------------------------------------------------------------------------------//
