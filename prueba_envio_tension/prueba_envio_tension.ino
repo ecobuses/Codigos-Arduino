@@ -6,7 +6,7 @@
 // pin que marca si el cargador est� conectado
 // detecta un 1 cuando esta desconectado y un 0 cuando esta conectado
 // entrada 3 (no se que es)
-#define pinDectectaCargador PD5
+#define pinDectectaCargador PD4
 //Con este pin anal�gico A5 se puede leer la corriente
 #define pinCorriente A3
 #define suavizado 30
@@ -74,24 +74,32 @@ void loop() {
   //----------------- Detecta y muestra si el cargador ------------------//
   //Detecta el cargador  y env�a un 0
   enchufeConectado = digitalRead(pinDectectaCargador); //o digitalRead?? ver el releee
+  delay(5);
   //--------------------------------------------------------------------//
   //----------------- Leer la tensión ----------------------------------//
   leerTension();
+  delay(5);
   //-------------------------------------------------------------------//
   //------------------- Chequeo la tensión para que no cargue demás --//
   chequeoTension();
+  delay(5);
   //------------------------------------------------------------------//
   //--------------------------Enviar Tensión -------------------------------//
   enviarTension();
+  delay(5);
   //-----------------------------------------------------------------//
   //------------------------- Leer la corriente -----------------------------------//
   promedioCorriente();
+  delay(5);
   enviarCorriente(corriente.corrienteLeida);
+  delay(5);
   //----------------------------------------------------------------//
   // ------------------------ Informe en consola -------------------//
   informeSerial();
+  delay(5);
   //---------------------------------------------------------------//
   reciboTrama();
+  delay(5);
 }
 //------------------------------------------------------------------------------------------------------//
 //-------------------------------------------- Recibo trama desde QT -----------------------------------//
@@ -124,7 +132,7 @@ void reciboTrama(){
 
 //------------------------------------------ Chequeo de la carga ---------------------------------------//
 void chequeoTension(){
-  if (enchufeConectado == HIGH) {
+  if (enchufeConectado == LOW) {
     if (tension > 83.5) { //poner aca el numero que tiene que i por la tabla de equivalencias
       digitalWrite(RELE2, LOW); //lo bajo
     }
@@ -150,6 +158,8 @@ void informeSerial(){
   Serial.print(" V | Corriente: ");
   Serial.print(corriente.corrienteLeida);
   Serial.println(" A");
+  Serial.print("Estoy cargando? Si esta en 0 no, si esta en 1 si ");
+  Serial.println(digitalRead(RELE2));
 }
 //-------------------------------------------------------------------------------------------------------//
 //------------------------------------------- Leo tensión -----------------------------------------------//
@@ -168,7 +178,7 @@ void leerTension(){
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
   const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
-  const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
+  const float sensibilidad = 0.004;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
   const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
@@ -198,7 +208,7 @@ void enviarCorriente(float corrienteArg) {
   // Guardado est�ndar en 2 bytes para mantener signo y decimales
   tramaCorriente.data[0] = (uint8_t)(corrienteEscalada >> 8);
   tramaCorriente.data[1] = (uint8_t)(corrienteEscalada & 0xFF);
-  tramaCorriente.data[2] = (uint8_t)(enchufeDetectado);
+  tramaCorriente.data[2] = (uint8_t)(enchufeConectado);
   if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error SPI al intentar enviar mensaje.");}
 }
 //------------------------------------------------------------------------------------------------------//
