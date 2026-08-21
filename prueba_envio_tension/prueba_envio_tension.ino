@@ -8,8 +8,10 @@
 // entrada 3 (no se que es)
 #define pinDectectaCargador PD4
 //Con este pin anal�gico A5 se puede leer la corriente
-#define pinCorriente A3
+#define pinCorriente A5
 #define suavizado 30
+//este pin alimenta el sensor de corriente 
+#define pinEnciendeCorriente PC0
 //-----------------------------------------------------------------------------------//
 //------------------------------------- Variables ----------------------------------//
 double analogicoTension = 0;
@@ -44,8 +46,11 @@ void setup() {
   pinMode (pinTension, INPUT);  //sensor tension
   pinMode(RELE2, OUTPUT);  //rele para cortar cargador
   pinMode(pinDectectaCargador, INPUT);  //rele que lee los 12v cuando se conecta el cargador
+  pinMode(pinEnciendeCorriente,OUTPUT);
+  digitalWrite(pinEnciendeCorriente,HIGH);
   digitalWrite(RELE2, HIGH); //Escribe un 1 para activar el cargador
   pinMode(pinCorriente, INPUT); //sensor de corriente
+  
   //---------------------------------------------------------------------//
   Serial.begin(9600);
   //------------------------------ Leo estado anterior -------------------//
@@ -160,6 +165,8 @@ void informeSerial(){
   Serial.println(" A");
   Serial.print("Estoy cargando? Si esta en 0 no, si esta en 1 si ");
   Serial.println(digitalRead(RELE2));
+  Serial.print("Valor del pin que enciente el sensor de corriente: ");
+  Serial.println(digitalRead(pinEnciendeCorriente));
 }
 //-------------------------------------------------------------------------------------------------------//
 //------------------------------------------- Leo tensión -----------------------------------------------//
@@ -178,7 +185,7 @@ void leerTension(){
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
   const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
-  const float sensibilidad = 0.004;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
+  const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
   const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
