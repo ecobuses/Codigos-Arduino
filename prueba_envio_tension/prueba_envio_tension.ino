@@ -6,7 +6,7 @@
 // pin que marca si el cargador est� conectado
 // detecta un 1 cuando esta desconectado y un 0 cuando esta conectado
 // entrada 3 (no se que es)
-#define pinDectectaCargador PD4
+#define pinDetectaCargador PD4
 //Con este pin anal�gico A5 se puede leer la corriente
 #define pinCorriente A5
 #define suavizado 30
@@ -50,7 +50,7 @@ void setup() {
   //--------------------------- Configuraci�n pines ----------------------//
   pinMode (pinTension, INPUT);  //sensor tension
   pinMode(RELE2, OUTPUT);  //rele para cortar cargador
-  pinMode(pinDectectaCargador, INPUT);  //rele que lee los 12v cuando se conecta el cargador
+  pinMode(pinDetectaCargador, INPUT);  //rele que lee los 12v cuando se conecta el cargador
   pinMode(pinEnciendeCorriente,OUTPUT); //Establece en salida el pin que enciende el sensor de corriente
   digitalWrite(pinEnciendeCorriente,HIGH); // Establece el valor en alto. 
   digitalWrite(RELE2, HIGH); //Escribe un 1 para activar el cargador
@@ -74,7 +74,7 @@ void setup() {
   tramaTension.data[1] = 0x00;
 
   tramaConexion.can_id = 900; 
-  tramaConexion.cad_dlc = 2; 
+  tramaConexion.can_dlc = 2; 
   tramaConexion.data[0] = 0x00;
   tramaConexion.data[1] = 0x00;
   
@@ -252,16 +252,15 @@ void enviarTension(){
 // -------------------------------------- Envío estado cargador ----------------------------------------//
 void enviarEstadoCargador(){
   // Lee si el rele está en bajo o en alto y lo guarda en esa variable.
-  int estadoRele = digitalRead(pinDetectaCargador);
+  int estadoRele = digitalRead(RELE2);
   //Detecta el cargador  y env�a un 0
-  enchufeConectado = digitalRead(pinDectectaCargador);
+  enchufeConectado = digitalRead(pinDetectaCargador);
   tramaConexion.data[0] = enchufeConectado;
   tramaConexion.data[1] = estadoRele; 
   if(mcp2515.sendMessage(&tramaConexion)== MCP2515::ERROR_OK){
-    else{
+  }else{
       Serial.println("Error al envíar el mensaje de conexión");
     }
-  }
-  
-}
+ }
+ 
 // -----------------------------------------------------------------------------------------------------//
