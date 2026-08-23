@@ -6,10 +6,12 @@
 // pin que marca si el cargador est� conectado
 // detecta un 1 cuando esta desconectado y un 0 cuando esta conectado
 // entrada 3 (no se que es)
-#define pinDectectaCargador PD5
+#define pinDectectaCargador PD4
 //Con este pin anal�gico A5 se puede leer la corriente
-#define pinCorriente A3
+#define pinCorriente A5
 #define suavizado 30
+//este pin alimenta el sensor de corriente 
+#define pinEnciendeCorriente PC0
 //-----------------------------------------------------------------------------------//
 //------------------------------------- Variables ----------------------------------//
 double analogicoTension = 0;
@@ -44,8 +46,11 @@ void setup() {
   pinMode (pinTension, INPUT);  //sensor tension
   pinMode(RELE2, OUTPUT);  //rele para cortar cargador
   pinMode(pinDectectaCargador, INPUT);  //rele que lee los 12v cuando se conecta el cargador
+  pinMode(pinEnciendeCorriente,OUTPUT); //Establece en salida el pin que enciende el sensor de corriente
+  digitalWrite(pinEnciendeCorriente,HIGH); // Establece el valor en alto. 
   digitalWrite(RELE2, HIGH); //Escribe un 1 para activar el cargador
   pinMode(pinCorriente, INPUT); //sensor de corriente
+  
   //---------------------------------------------------------------------//
   Serial.begin(9600);
   //------------------------------ Leo estado anterior -------------------//
@@ -73,25 +78,33 @@ void setup() {
 void loop() {
   //----------------- Detecta y muestra si el cargador ------------------//
   //Detecta el cargador  y env�a un 0
-  enchufeConectado = digitalRead(pinDectectaCargador); //o digitalRead?? ver el releee
+  enchufeConectado = digitalRead(pinDectectaCargador); 
+  delay(5);
   //--------------------------------------------------------------------//
   //----------------- Leer la tensión ----------------------------------//
   leerTension();
+  delay(5);
   //-------------------------------------------------------------------//
   //------------------- Chequeo la tensión para que no cargue demás --//
   chequeoTension();
+  delay(5);
   //------------------------------------------------------------------//
   //--------------------------Enviar Tensión -------------------------------//
   enviarTension();
+  delay(5);
   //-----------------------------------------------------------------//
   //------------------------- Leer la corriente -----------------------------------//
   promedioCorriente();
+  delay(5);
   enviarCorriente(corriente.corrienteLeida);
+  delay(5);
   //----------------------------------------------------------------//
   // ------------------------ Informe en consola -------------------//
   informeSerial();
+  delay(5);
   //---------------------------------------------------------------//
   reciboTrama();
+  delay(5);
 }
 //------------------------------------------------------------------------------------------------------//
 //-------------------------------------------- Recibo trama desde QT -----------------------------------//
@@ -124,7 +137,7 @@ void reciboTrama(){
 
 //------------------------------------------ Chequeo de la carga ---------------------------------------//
 void chequeoTension(){
-  if (enchufeConectado == HIGH) {
+  if (enchufeConectado == LOW) {
     if (tension > 83.5) { //poner aca el numero que tiene que i por la tabla de equivalencias
       digitalWrite(RELE2, LOW); //lo bajo
     }
@@ -150,6 +163,10 @@ void informeSerial(){
   Serial.print(" V | Corriente: ");
   Serial.print(corriente.corrienteLeida);
   Serial.println(" A");
+  Serial.print("Estoy cargando? Si esta en 0 no, si esta en 1 si ");
+  Serial.println(digitalRead(RELE2));
+  Serial.print("Valor del pin que enciente el sensor de corriente: ");
+  Serial.println(digitalRead(pinEnciendeCorriente));
 }
 //-------------------------------------------------------------------------------------------------------//
 //------------------------------------------- Leo tensión -----------------------------------------------//
