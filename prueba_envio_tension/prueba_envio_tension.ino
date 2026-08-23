@@ -35,9 +35,14 @@ int estadoRelayDos;
 
 //---------------------------- Comunicaci�n CAN --------------------------//
 MCP2515 mcp2515(10);
+// Envía información de la corriente
 struct can_frame tramaCorriente;
+// Envía información de la tensión. 
 struct can_frame tramaTension;
+// Se utiliza para leer los mensaje que se recibe desde el programa QT. 
 struct can_frame canMsg;
+// Envía información correspondiente a si el ecobus está conectado y si el rele está en bajo. 
+struct can_frame tramaConexion;
 //------------------------------------------------------------------------//
 
 void setup() {
@@ -59,16 +64,20 @@ void setup() {
   
   //------------------------------ Comunicaci�n CAN ----------------------//
   tramaCorriente.can_id = 880;
-  tramaCorriente.can_dlc = 3;
+  tramaCorriente.can_dlc = 2;
   tramaCorriente.data[0] = 0x00;
   tramaCorriente.data[1] = 0x00;
-  //Lo modifico para guarda el valor 
-  tramaCorriente.data[2] = 0x00;
 
   tramaTension.can_id = 890;
   tramaTension.can_dlc = 2;
   tramaTension.data[0] = 0x00;
   tramaTension.data[1] = 0x00;
+
+  tramaConexion.can_id = 900; 
+  tramaConexion.cad_dlc = 2; 
+  tramaConexion.data[0] = 0x00;
+  tramaConexion.data[1] = 0x00;
+  
   mcp2515.reset();
   mcp2515.setBitrate(CAN_250KBPS, MCP_16MHZ);
   mcp2515.setNormalMode();
@@ -76,35 +85,38 @@ void setup() {
 }
 //--------------------------------- Loop ------------------------------------------------------------------//
 void loop() {
-  //----------------- Detecta y muestra si el cargador ------------------//
-  //Detecta el cargador  y env�a un 0
-  enchufeConectado = digitalRead(pinDectectaCargador); 
-  delay(5);
-  //--------------------------------------------------------------------//
+  
   //----------------- Leer la tensión ----------------------------------//
   leerTension();
-  delay(5);
+  delay(1);
   //-------------------------------------------------------------------//
+  
+  // ------------------------ Envío la información del estado de la conección -----------------//
+  enviarTension();
+  delay(1);
+  // ------------------------------------------------------------------------------------------// 
+  
   //------------------- Chequeo la tensión para que no cargue demás --//
   chequeoTension();
-  delay(5);
+  delay(1);
   //------------------------------------------------------------------//
   //--------------------------Enviar Tensión -------------------------------//
   enviarTension();
-  delay(5);
+  delay(1);
   //-----------------------------------------------------------------//
   //------------------------- Leer la corriente -----------------------------------//
   promedioCorriente();
-  delay(5);
+  delay(1);
   enviarCorriente(corriente.corrienteLeida);
-  delay(5);
+  delay(1);
   //----------------------------------------------------------------//
   // ------------------------ Informe en consola -------------------//
   informeSerial();
-  delay(5);
+  delay(1);
   //---------------------------------------------------------------//
   reciboTrama();
-  delay(5);
+  delay(1);
+  
 }
 //------------------------------------------------------------------------------------------------------//
 //-------------------------------------------- Recibo trama desde QT -----------------------------------//
@@ -202,7 +214,7 @@ void promedioCorriente() {
       // 2. Aplicar la f�rmula del datasheet: I = (Uout - Uo) / S
       sumaC += ((5 * voltajeMedido) / (alimentacionHall) - vRef) / sensibilidad;
     }
-    delay(5);
+    delay(1);
   }
 
   corriente.corrienteLeida = sumaC /suavizado;
@@ -215,10 +227,10 @@ void enviarCorriente(float corrienteArg) {
   // Guardado est�ndar en 2 bytes para mantener signo y decimales
   tramaCorriente.data[0] = (uint8_t)(corrienteEscalada >> 8);
   tramaCorriente.data[1] = (uint8_t)(corrienteEscalada & 0xFF);
-  tramaCorriente.data[2] = (uint8_t)(enchufeConectado);
-  if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error SPI al intentar enviar mensaje.");}
+  if (mcp2515.sendMessage(&tramaCorriente) == MCP2515::ERROR_OK) {}else{      Serial.println("Error al enviar mensaje de corriente.");}
 }
 //------------------------------------------------------------------------------------------------------//
+
 //--------------------------------------- Envío Tnesión ------------------------------------------------//
 // Función que envía la tensión.
 void enviarTension(){
@@ -229,7 +241,24 @@ void enviarTension(){
     tramaTension.data[1] = tensionDecimal;
     if (mcp2515.sendMessage(&tramaTension) == MCP2515::ERROR_OK) {
     } else {
-      Serial.println("Error SPI al intentar enviar mensaje.");
+      Serial.println("Error SPI al enviar el mensaje de tensión.");
     }
 }
 //------------------------------------------------------------------------------------------------------//
+
+// -------------------------------------- Envío estado cargador ----------------------------------------//
+void enviarEstadoCargador(){
+  // Lee si el rele está en bajo o en alto y lo guarda en esa variable.
+  int estadoRele = digitalRead(pinDetectaCargador);
+  //Detecta el cargador  y env�a un 0
+  enchufeConectado = digitalRead(pinDectectaCargador);
+  tramaConexion.data[0] = enchufeConectado;
+  tramaConexion.data[1] = estadoRele; 
+  if(mcp2515.sendMessage(&tramaConexion)== MCP2515::ERROR_OK){
+    else{
+      Serial.println("Error al envíar el mensaje de conexión");
+    }
+  }
+  
+}
+// -----------------------------------------------------------------------------------------------------//
