@@ -46,8 +46,8 @@ void setup() {
   pinMode (pinTension, INPUT);  //sensor tension
   pinMode(RELE2, OUTPUT);  //rele para cortar cargador
   pinMode(pinDectectaCargador, INPUT);  //rele que lee los 12v cuando se conecta el cargador
-  pinMode(pinEnciendeCorriente,OUTPUT);
-  digitalWrite(pinEnciendeCorriente,HIGH);
+  pinMode(pinEnciendeCorriente,OUTPUT); //Establece en salida el pin que enciende el sensor de corriente
+  digitalWrite(pinEnciendeCorriente,HIGH); // Establece el valor en alto. 
   digitalWrite(RELE2, HIGH); //Escribe un 1 para activar el cargador
   pinMode(pinCorriente, INPUT); //sensor de corriente
   
@@ -78,7 +78,7 @@ void setup() {
 void loop() {
   //----------------- Detecta y muestra si el cargador ------------------//
   //Detecta el cargador  y env�a un 0
-  enchufeConectado = digitalRead(pinDectectaCargador); //o digitalRead?? ver el releee
+  enchufeConectado = digitalRead(pinDectectaCargador); 
   delay(5);
   //--------------------------------------------------------------------//
   //----------------- Leer la tensión ----------------------------------//
