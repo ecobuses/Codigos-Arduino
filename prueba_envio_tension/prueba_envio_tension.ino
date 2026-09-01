@@ -9,7 +9,7 @@
 #define pinDetectaCargador PD4
 //Con este pin anal�gico A5 se puede leer la corriente
 #define pinCorriente A5
-#define suavizado 30
+#define suavizado 16
 //este pin alimenta el sensor de corriente 
 #define pinEnciendeCorriente PC0
 //-----------------------------------------------------------------------------------//
@@ -43,6 +43,8 @@ struct can_frame tramaTension;
 struct can_frame canMsg;
 // Envía información correspondiente a si el ecobus está conectado y si el rele está en bajo. 
 struct can_frame tramaConexion;
+float vRefReal = 2.50;
+
 //------------------------------------------------------------------------//
 
 void setup() {
@@ -81,6 +83,14 @@ void setup() {
   mcp2515.reset();
   mcp2515.setBitrate(CAN_250KBPS, MCP_16MHZ);
   mcp2515.setNormalMode();
+  long sumaADC = 0;
+  for (int k = 0; k < 64; k++) {
+    sumaADC += analogRead(pinCorriente);
+    delay(5);
+  }
+  // Guardamos el voltaje de reposo real (ej. 2.47 V)
+  vRefReal = ((float)sumaADC / 64.0) * (5.0 / 1023.0);
+
   //----------------------------------------------------------------------//
 }
 //--------------------------------- Loop ------------------------------------------------------------------//
@@ -192,6 +202,7 @@ void leerTension(){
     analogicoTension = analogRead(pinTension);
     //Convierto el valor 
     sumaT+=((analogicoTension * 5.0 / 1023.0) * (100 / 5));
+    //delay(1);
   }
   tension=sumaT/suavizado;
 }
@@ -199,9 +210,9 @@ void leerTension(){
 //------------------------------------------ Leo corriente ----------------------------------------------//
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
-  const float vRef = 2.5;            // Tensi�n de offset a 0 A (2.5 V)
-  const float sensibilidad = 0.0267;  // Sensibilidad Canal 1: 267 mV/A -> 0.0267 V/A
-  const float alimentacionHall = 5.0; //Tension con el cual se alimenta el sensor.
+  const float vRef = 2.478;            // Tensi�n de offset a 0 A (2.5 V)
+  const float sensibilidad = 0.01;  // Sensibilidad Canal : 10 mV/A -> 0.01 V/A
+  const float alimentacionHall = 4.956; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
   for (int i = 0; i < suavizado; i++) {
@@ -215,7 +226,7 @@ void promedioCorriente() {
       Serial.println("Voltaje es mayor a 4.8 esta fuera del rango positivo 5.0-2.5/0.004=625 A, el canal 2 mide a lo mucho +250A");
     } else {
       // 2. Aplicar la f�rmula del datasheet: I = (Uout - Uo) / S
-      sumaC += ((5 * voltajeMedido) / (alimentacionHall) - vRef) / sensibilidad;
+      sumaC += ((5.0 * voltajeMedido) / (alimentacionHall) - vRef) / sensibilidad;
     }
     delay(1);
   }
