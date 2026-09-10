@@ -210,9 +210,9 @@ void leerTension(){
 //------------------------------------------ Leo corriente ----------------------------------------------//
 // Función que promedia la corriente leída. 
 void promedioCorriente() {
-  const float vRef = 2.4675;            // Tensi�n de offset a 0 A (2.5 V)
+  const float vRef = 2.473;            // Tensi�n de offset a 0 A (2.5 V)
   const float sensibilidad = 0.01;  // Sensibilidad Canal : 10 mV/A -> 0.01 V/A
-  const float alimentacionHall = 4.935; //Tension con el cual se alimenta el sensor.
+  const float alimentacionHall = 4.946; //Tension con el cual se alimenta el sensor.
   float sumaC = 0.0;
   float sumaV = 0.0;
   for (int i = 0; i < suavizado; i++) {
